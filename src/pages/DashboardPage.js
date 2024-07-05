@@ -1,69 +1,107 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Grid, Paper, Typography } from '@mui/material';
+import { Box, Grid, Paper, Typography, Card, CardContent, Modal, Button, TextField } from '@mui/material';
 
 const DashboardPage = () => {
-    const [comments, setComments] = useState([]);
-    const [users, setUsers] = useState([]);
     const [todos, setTodos] = useState([]);
+    const [selectedTodo, setSelectedTodo] = useState(null);
+    const [open, setOpen] = useState(false);
 
     useEffect(() => {
-        const fetchComments = async () => {
-            try {
-                const response = await fetch('https://jsonplaceholder.typicode.com/comments');
-                const data = await response.json();
-                setComments(data);
-            } catch (error) {
-                console.error('Error fetching comments:', error);
-            }
-        };
-
-        const fetchUsers = async () => {
-            try {
-                const response = await fetch('https://jsonplaceholder.typicode.com/users');
-                const data = await response.json();
-                setUsers(data);
-            } catch (error) {
-                console.error('Error fetching users:', error);
-            }
-        };
-
         const fetchTodos = async () => {
             try {
                 const response = await fetch('https://jsonplaceholder.typicode.com/todos');
                 const data = await response.json();
                 setTodos(data);
             } catch (error) {
-                console.error('Error fetching users:', error);
+                console.error('Error fetching todos:', error);
             }
         };
+
         fetchTodos();
-        fetchUsers();
-        fetchComments();
     }, []);
+
+    const handleOpen = (todo) => {
+        setSelectedTodo(todo);
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+        setSelectedTodo(null);
+    };
 
     return (
         <Box sx={{ p: 3 }}>
-            <Typography variant="h4" gutterBottom>Dashboard</Typography>
+            <Typography variant="h4" gutterBottom>Todo List</Typography>
             <Grid container spacing={3}>
-                <Grid item xs={12} md={6} lg={4}>
-                    <Paper sx={{ p: 2 }}>
-                        <Typography variant="h6">Total Comments</Typography>
-                        <Typography variant="body1">Number of comments: {comments.length}</Typography>
-                    </Paper>
-                </Grid>
-                <Grid item xs={12} md={6} lg={4}>
-                    <Paper sx={{ p: 2 }}>
-                        <Typography variant="h6">Total Users</Typography>
-                        <Typography variant="body1">Number of users: {users.length}</Typography>
-                    </Paper>
-                </Grid>
-                <Grid item xs={12} md={6} lg={4}>
-                    <Paper sx={{ p: 2 }}>
-                        <Typography variant="h6">Total Todos</Typography>
-                        <Typography variant="body1">Number of Todos: {todos.length}</Typography>
-                    </Paper>
-                </Grid>
+                {todos.map((todo) => (
+                    <Grid item xs={12} sm={6} md={4} lg={3} key={todo.id}>
+                        <Card 
+                            sx={{ 
+                                backgroundColor: todo.completed ? 'green' : 'red',
+                                color: 'white',
+                                cursor: 'pointer'
+                            }}
+                            onClick={() => handleOpen(todo)}
+                        >
+                            <CardContent>
+                                <Typography variant="h6">{todo.title}</Typography>
+                                <Typography variant="body2">
+                                    {todo.completed ? 'PASS' : 'FAIL'}
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                ))}
             </Grid>
+            <Modal
+                open={open}
+                onClose={handleClose}
+                aria-labelledby="todo-modal-title"
+                aria-describedby="todo-modal-description"
+            >
+                <Box sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: 400,
+                    bgcolor: 'background.paper',
+                    border: '2px solid #000',
+                    boxShadow: 24,
+                    p: 4,
+                }}>
+                    {selectedTodo && (
+                        <form>
+                            <Typography id="todo-modal-title" variant="h6" component="h2">
+                                Todo Details
+                            </Typography>
+                            <TextField
+                                label="Title"
+                                value={selectedTodo.title}
+                                margin="normal"
+                                fullWidth
+                                disabled
+                            />
+                            <TextField
+                                label="Completed"
+                                value={selectedTodo.completed ? 'PASS' : 'FAIL'}
+                                margin="normal"
+                                fullWidth
+                                disabled
+                            />
+                            <TextField
+                                label="Description"
+                                value={selectedTodo.title} // No description available in the API, using title as placeholder
+                                margin="normal"
+                                fullWidth
+                                disabled
+                            />
+                            <Button onClick={handleClose} variant="contained" sx={{ mt: 2 }}>Close</Button>
+                        </form>
+                    )}
+                </Box>
+            </Modal>
         </Box>
     );
 };
